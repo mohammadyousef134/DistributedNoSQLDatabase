@@ -27,5 +27,11 @@ public class GlobalExceptionHandler {
         return new APIResponse(403, e.getMessage());
     }
 
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public APIResponse handleValidation(ValidationException e) {
+        return new APIResponse(400, e.getMessage());
+    }
+
 
 }
