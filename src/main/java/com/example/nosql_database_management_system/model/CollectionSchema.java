@@ -1,9 +1,11 @@
 package com.example.nosql_database_management_system.model;
 
+import com.example.nosql_database_management_system.Enum.SchemaFieldType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -24,6 +26,29 @@ public class CollectionSchema {
 
         schemaJson.put("fields", fieldsJson);
         return schemaJson;
+    }
+
+    public static CollectionSchema fromJSON(JSONObject json) {
+
+        Map<String, SchemaField> fields = new HashMap<>();
+
+        JSONObject fieldsObject = json.getJSONObject("fields");
+
+        for (String key : fieldsObject.keySet()) {
+
+            JSONObject fieldObj = fieldsObject.getJSONObject(key);
+
+            String typeStr = fieldObj.getString("type");
+            SchemaFieldType type = SchemaFieldType.valueOf(typeStr);
+
+            boolean nullable = fieldObj.getBoolean("nullable");
+
+            SchemaField field = new SchemaField(type, nullable);
+
+            fields.put(key, field);
+        }
+
+        return new CollectionSchema(fields);
     }
 
 }
