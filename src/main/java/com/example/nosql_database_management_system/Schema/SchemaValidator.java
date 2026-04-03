@@ -8,7 +8,9 @@ import org.json.JSONObject;
 
 public class SchemaValidator {
 
-    public static void validate(JSONObject doc, CollectionSchema schema) {
+    public static JSONObject validate(JSONObject doc, CollectionSchema schema) {
+        JSONObject newDocument = new JSONObject();
+
         for (String key : schema.getFields().keySet()) {
 
             SchemaField field = schema.getField(key);
@@ -17,6 +19,7 @@ public class SchemaValidator {
                 if (!field.isNullable()) {
                     throw new ValidationException("Missing field: " + key);
                 }
+                newDocument.put(key, JSONObject.NULL);
                 continue;
             }
 
@@ -25,6 +28,7 @@ public class SchemaValidator {
                 if (!field.isNullable()) {
                     throw new ValidationException("Null not allowed: " + key);
                 }
+                newDocument.put(key, JSONObject.NULL);
                 continue;
             }
 
@@ -32,8 +36,9 @@ public class SchemaValidator {
                 throw new ValidationException("Invalid type for: " + key);
             }
 
-
+            newDocument.put(key, value);
         }
+        return newDocument;
     }
 
     private static boolean isValidType(Object value, SchemaFieldType type) {
