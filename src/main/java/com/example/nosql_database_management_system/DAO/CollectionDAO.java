@@ -2,12 +2,14 @@ package com.example.nosql_database_management_system.DAO;
 
 import com.example.nosql_database_management_system.exception.ForbiddenException;
 import com.example.nosql_database_management_system.exception.ResourceNotFoundException;
+import com.example.nosql_database_management_system.model.CollectionSchema;
 import org.json.JSONObject;
 import org.springframework.stereotype.Repository;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 
 @Repository
 public class CollectionDAO {
@@ -32,10 +34,10 @@ public class CollectionDAO {
             writer.write(schema.toString(4));
         }
 
-        File collectionPath = new File(BASE_PATH + DBName + "/" + ColName);
+        File collectionFile = new File(BASE_PATH + DBName + "/" + ColName + ".json");
 
-        if (!collectionPath.mkdirs()) {
-            throw new ForbiddenException("Failed to create collection directory");
+        if (!collectionFile.createNewFile()) {
+            throw new ForbiddenException("Failed to create collection file");
         }
     }
 
@@ -55,12 +57,28 @@ public class CollectionDAO {
         }
 
         // collection file
-        File collectionFile = new File(BASE_PATH + DBName + "/" + ColName);
-
+        File collectionFile = new File(BASE_PATH + DBName + "/" + ColName + ".json");
         if (collectionFile.exists() && !collectionFile.delete()) {
             throw new ForbiddenException("Failed to delete collection file");
         }
     }
 
+    // get schema
+    public CollectionSchema getSchemaAsCollectionSchemaObject(String DBName, String ColName) throws IOException {
+        File file = new File(BASE_PATH + DBName + "/schemas/" + ColName + ".json");
+
+        if (!file.exists()) {
+            throw new ResourceNotFoundException("Collection does not exist");
+        }
+
+        String content = new String(Files.readAllBytes(file.toPath()));
+
+        if (content.isEmpty()) {
+            throw new RuntimeException("Schema file is empty");
+        }
+
+        JSONObject jsonObject = new JSONObject(content);
+        return CollectionSchema.fromJSON(jsonObject);
+    }
 
 }

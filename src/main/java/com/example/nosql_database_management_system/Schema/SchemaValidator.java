@@ -6,10 +6,13 @@ import com.example.nosql_database_management_system.model.CollectionSchema;
 import com.example.nosql_database_management_system.model.SchemaField;
 import org.json.JSONObject;
 
+import java.util.UUID;
+
 public class SchemaValidator {
 
     public static JSONObject validate(JSONObject doc, CollectionSchema schema) {
         JSONObject newDocument = new JSONObject();
+        newDocument.put("id", UUID.randomUUID());
 
         for (String key : schema.getFields().keySet()) {
 
