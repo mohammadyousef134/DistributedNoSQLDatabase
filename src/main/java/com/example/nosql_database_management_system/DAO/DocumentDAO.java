@@ -1,5 +1,6 @@
 package com.example.nosql_database_management_system.DAO;
 
+import com.example.nosql_database_management_system.DAO.indexing.PropertyIndexManager;
 import com.example.nosql_database_management_system.exception.ResourceNotFoundException;
 import com.example.nosql_database_management_system.exception.ValidationException;
 import com.example.nosql_database_management_system.model.CollectionSchema;
@@ -12,16 +13,22 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Repository
 public class DocumentDAO {
     @Autowired
     private CollectionDAO collectionDAO;
+    @Autowired
+    private PropertyIndexManager indexManager;
+
     private final String BASE_PATH = "databases/";
     // insert doc
-    public void insertDoc(String DBName, String colName, JSONObject doc) throws IOException {
-        File file = new File(BASE_PATH + DBName + "/" + colName + ".json");
+    public void insertDoc(String db, String col, JSONObject doc) throws IOException {
+        File file = new File(BASE_PATH + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
@@ -37,12 +44,12 @@ public class DocumentDAO {
         try (FileWriter fileWriter = new FileWriter(file, false)) {
             fileWriter.write(jsonArray.toString(4));
         }
+        indexManager.addToIndex(db, col, doc);
     }
 
     // get all doc
-    public JSONArray getAllDocs(String DBName, String colName) throws IOException{
-        File file = new File(BASE_PATH + DBName + "/" + colName + ".json");
-        System.out.println(file.getAbsolutePath());
+    public JSONArray getAllDocs(String db, String col) throws IOException{
+        File file = new File(BASE_PATH + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
@@ -52,9 +59,8 @@ public class DocumentDAO {
     }
 
     // get doc
-    public JSONObject getDoc(String DBName, String colName, UUID docId) throws IOException {
-        File file = new File(BASE_PATH + DBName + "/" + colName + ".json");
-        System.out.println(file.getAbsolutePath());
+    public JSONObject getDoc(String db, String col, UUID docId) throws IOException {
+        File file = new File(BASE_PATH + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
@@ -70,9 +76,8 @@ public class DocumentDAO {
     }
 
     // delete doc
-    public void deleteDoc(String DBName, String colName, UUID docId) throws IOException {
-        File file = new File(BASE_PATH + DBName + "/" + colName + ".json");
-        System.out.println(file.getAbsolutePath());
+    public void deleteDoc(String db, String col, UUID docId) throws IOException {
+        File file = new File(BASE_PATH + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
@@ -80,10 +85,13 @@ public class DocumentDAO {
         JSONArray array = new JSONArray(content);
         JSONArray newArray = new JSONArray();
         boolean found = false;
+        JSONObject object = new JSONObject();
         for (int i = 0; i < array.length(); i++) {
+
             JSONObject obj = array.getJSONObject(i);
             if (obj.getString("id").equals(docId.toString())) {
                 found = true;
+                object = obj;
                 continue;
             }
             newArray.put(obj);
@@ -94,12 +102,12 @@ public class DocumentDAO {
         try (FileWriter fileWriter = new FileWriter(file, false)) {
             fileWriter.write(newArray.toString(4));
         }
+        indexManager.removeFromIndex(db, col, object);
     }
 
     // update doc
-    public void updateDoc(String DBName, String colName, UUID docId, String field, String newValue) throws IOException{
-        File file = new File(BASE_PATH + DBName + "/" + colName + ".json");
-        System.out.println(file.getAbsolutePath());
+    public void updateDoc(String db, String col, UUID docId, String field, String newValue) throws IOException{
+        File file = new File(BASE_PATH + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
@@ -112,7 +120,7 @@ public class DocumentDAO {
             JSONObject obj = array.getJSONObject(i);
             if (obj.getString("id").equals(docId.toString())) {
                 found = true;
-                CollectionSchema schema = collectionDAO.getSchemaAsCollectionSchemaObject(DBName, colName);
+                CollectionSchema schema = collectionDAO.getSchemaAsCollectionSchemaObject(db, col);
                 if (!schema.getField(field).isNullable() && newValue == null) {
                     throw new ValidationException("Null not allowed");
                 }
@@ -126,6 +134,19 @@ public class DocumentDAO {
         try (FileWriter fileWriter = new FileWriter(file, false)) {
             fileWriter.write(newArray.toString(4));
         }
+        indexManager.addToIndex(db, col, newDoc);
     }
 
+    public List<Map<String, Object>> filter(String db, String col, String field, String value) {
+
+        List<JSONObject> docs = indexManager.search(db, col, field, value);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (JSONObject doc : docs) {
+            result.add(doc.toMap());
+        }
+
+        return result;
+    }
 }

@@ -9,7 +9,10 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.print.Doc;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -43,6 +46,10 @@ public class DocumentService {
 
     public void updateDoc(String DBName, String colName, UUID docId, String field, String newValue) throws IOException {
         DocDao.updateDoc(DBName, colName, docId, field, newValue);
+    }
+
+    public List<Map<String, Object>> filter(String db, String col, String field, String value) {
+        return DocDao.filter(db, col, field, value);
     }
 
 

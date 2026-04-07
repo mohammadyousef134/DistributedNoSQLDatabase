@@ -8,10 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -21,26 +18,26 @@ public class DocumentController {
     private DocumentService service;
 
     // /insertOne/{db}/{collection}
-    @PostMapping("/insertOne/{DBName}/{colName}")
+    @PostMapping("/insertOne/{db}/{col}")
     public APIResponse insertOne(
-            @PathVariable String DBName,
-            @PathVariable String colName,
+            @PathVariable String db,
+            @PathVariable String col,
             @RequestBody Map<String, Object> doc
             ) throws IOException
     {
         JSONObject jsonDoc = new JSONObject(doc);
-        service.insertOne(DBName, colName, jsonDoc);
+        service.insertOne(db, col, jsonDoc);
         return new APIResponse(200, "New document inserted successfully");
     }
 
     // /getAllDocs/{db}/{collection}
-    @GetMapping("/getAllDocs/{DBName}/{colName}")
+    @GetMapping("/getAllDocs/{db}/{col}")
     public List<Object> getALlDocs(
-            @PathVariable String DBName,
-            @PathVariable String colName
+            @PathVariable String db,
+            @PathVariable String col
     ) throws IOException {
 
-        JSONArray array = service.getALlDocs(DBName, colName);
+        JSONArray array = service.getALlDocs(db, col);
 
         List<Object> list = new ArrayList<>();
 
@@ -52,38 +49,49 @@ public class DocumentController {
     }
 
 //     /getDoc/{db}/{collection}/{id}
-    @GetMapping("/getDoc/{DBName}/{colName}/{docId}")
+    @GetMapping("/getDoc/{db}/{col}/{docId}")
     public Object getDoc(
-            @PathVariable String DBName,
-            @PathVariable String colName,
+            @PathVariable String db,
+            @PathVariable String col,
             @PathVariable UUID docId) throws IOException {
 
-        return service.getDoc(DBName, colName, docId);
+        return service.getDoc(db, col, docId);
     }
 
     // /deleteDoc/{db}/{collection}/{id}
-    @DeleteMapping("/deleteDoc/{DBName}/{colName}/{docId}")
+    @DeleteMapping("/deleteDoc/{db}/{col}/{docId}")
     public APIResponse deleteDoc(
-            @PathVariable String DBName,
-            @PathVariable String colName,
+            @PathVariable String db,
+            @PathVariable String col,
             @PathVariable UUID docId) throws IOException {
 
-        service.deleteDoc(DBName, colName, docId);
+        service.deleteDoc(db, col, docId);
         return new APIResponse(200, "Document deleted successfully");
 
     }
 
     // /updateDoc/{db}/{collection}/{id}/{field}/{value}
-    @PutMapping("/updateDoc/{DBName}/{colName}/{docId}/{field}/{newValue}")
+    @PutMapping("/updateDoc/{db}/{col}/{docId}/{field}/{newValue}")
     public APIResponse updateDoc(
-            @PathVariable String DBName,
-            @PathVariable String colName,
+            @PathVariable String db,
+            @PathVariable String col,
             @PathVariable UUID docId,
             @PathVariable String field,
             @PathVariable String newValue
     ) throws IOException {
-        service.updateDoc(DBName, colName, docId, field, newValue);
+        service.updateDoc(db, col, docId, field, newValue);
         return new APIResponse(200, "Document updated successfully");
+    }
+
+    @GetMapping("/filter/{db}/{col}/{field}/{value}")
+    public List<Map<String, Object>> filter(
+            @PathVariable String db,
+            @PathVariable String col,
+            @PathVariable String field,
+            @PathVariable String value
+            ) {
+        List<Map<String, Object>> list = service.filter(db, col, field, value);
+        return list;
     }
 
 }
