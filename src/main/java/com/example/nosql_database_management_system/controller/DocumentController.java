@@ -22,11 +22,12 @@ public class DocumentController {
     public APIResponse insertOne(
             @PathVariable String db,
             @PathVariable String col,
-            @RequestBody Map<String, Object> doc
-            ) throws IOException
+            @RequestBody Map<String, Object> doc,
+            @RequestParam(defaultValue = "false") boolean forwarded
+    ) throws IOException
     {
         JSONObject jsonDoc = new JSONObject(doc);
-        service.insertOne(db, col, jsonDoc);
+        service.insertOne(db, col, jsonDoc, forwarded);
         return new APIResponse(200, "New document inserted successfully");
     }
 
@@ -63,9 +64,11 @@ public class DocumentController {
     public APIResponse deleteDoc(
             @PathVariable String db,
             @PathVariable String col,
-            @PathVariable UUID docId) throws IOException {
+            @PathVariable UUID docId,
+            @RequestParam(defaultValue = "false") boolean forwarded
+        ) throws IOException {
 
-        service.deleteDoc(db, col, docId);
+        service.deleteDoc(db, col, docId, forwarded);
         return new APIResponse(200, "Document deleted successfully");
 
     }
@@ -77,9 +80,10 @@ public class DocumentController {
             @PathVariable String col,
             @PathVariable UUID docId,
             @PathVariable String field,
-            @PathVariable String newValue
+            @PathVariable String newValue,
+            @RequestParam(defaultValue = "false") boolean forwarded
     ) throws IOException {
-        service.updateDoc(db, col, docId, field, newValue);
+        service.updateDoc(db, col, docId, field, newValue, forwarded);
         return new APIResponse(200, "Document updated successfully");
     }
 
