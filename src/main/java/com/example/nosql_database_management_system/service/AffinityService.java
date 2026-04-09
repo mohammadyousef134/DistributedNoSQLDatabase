@@ -6,7 +6,7 @@ import java.util.List;
 
 @Service
 public class AffinityService {
-    List<String> nodes = List.of(
+    public static List<String> nodes = List.of(
             "http://localhost:8081",
             "http://localhost:8082"
     );

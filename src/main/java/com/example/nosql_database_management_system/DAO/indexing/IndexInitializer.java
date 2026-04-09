@@ -31,7 +31,6 @@ public class IndexInitializer {
     }
 
 
-
     private void rebuildIndex() throws IOException {
         File base = new File(getBasePath());
 

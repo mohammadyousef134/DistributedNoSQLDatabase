@@ -30,7 +30,7 @@ public class DocumentService {
     private String currentNode;
 
     // insert doc
-    public void insertOne(String db, String col, JSONObject doc, boolean forwarded) throws IOException {
+    public void insertOne(String db, String col, JSONObject doc, boolean forwarded, boolean replicated) throws IOException {
         CollectionSchema schema = ColDao.getSchemaAsCollectionSchemaObject(db, col);
         JSONObject validatedDoc = SchemaValidator.validate(doc, schema);
 
@@ -40,12 +40,16 @@ public class DocumentService {
         System.out.println("Affinity Node: " + affinityNode);
 
         if (!forwarded && !currentNode.equals(affinityNode)) {
-            System.out.println("Forwarding delete to: " + affinityNode);
-
+            System.out.println("Forwarding insert to: " + affinityNode);
             nodeCommunicationService.forwardInsert(affinityNode, db, col, doc);
             return;
         }
+
         DocDao.insertDoc(db, col, validatedDoc);
+
+        if (!replicated) {
+            nodeCommunicationService.broadcastInsert(db, col, validatedDoc);
+        }
     }
 
     // get all
@@ -60,7 +64,7 @@ public class DocumentService {
     }
 
     // delete doc
-    public void deleteDoc(String db, String col, UUID docId, boolean forwarded) throws IOException {
+    public void deleteDoc(String db, String col, UUID docId, boolean forwarded, boolean replicated) throws IOException {
         String affinityNode = affinityService.getAffinityNode(docId.toString());
 
         System.out.println("Current Node: " + currentNode);
@@ -72,10 +76,15 @@ public class DocumentService {
             nodeCommunicationService.forwardDelete(affinityNode, db, col, docId);
             return;
         }
+
         DocDao.deleteDoc(db, col, docId);
+
+        if (!replicated) {
+            nodeCommunicationService.broadcastDelete(db, col, docId);
+        }
     }
 
-    public void updateDoc(String db, String col, UUID docId, String field, String newValue, boolean forwarded) throws IOException {
+    public void updateDoc(String db, String col, UUID docId, String field, String newValue, boolean forwarded, boolean replicated) throws IOException {
         String affinityNode = affinityService.getAffinityNode(docId.toString());
 
         System.out.println("Current Node: " + currentNode);
@@ -88,6 +97,9 @@ public class DocumentService {
             return;
         }
         DocDao.updateDoc(db, col, docId, field, newValue);
+        if (!replicated) {
+            nodeCommunicationService.broadcastUpdate(db, col, docId, field, newValue);
+        }
     }
 
     public List<Map<String, Object>> filter(String db, String col, String field, String value) {

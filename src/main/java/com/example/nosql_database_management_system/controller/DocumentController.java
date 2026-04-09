@@ -23,11 +23,12 @@ public class DocumentController {
             @PathVariable String db,
             @PathVariable String col,
             @RequestBody Map<String, Object> doc,
-            @RequestParam(defaultValue = "false") boolean forwarded
+            @RequestParam(defaultValue = "false") boolean forwarded,
+            @RequestParam(defaultValue = "false") boolean replicated
     ) throws IOException
     {
         JSONObject jsonDoc = new JSONObject(doc);
-        service.insertOne(db, col, jsonDoc, forwarded);
+        service.insertOne(db, col, jsonDoc, forwarded, replicated);
         return new APIResponse(200, "New document inserted successfully");
     }
 
@@ -65,10 +66,11 @@ public class DocumentController {
             @PathVariable String db,
             @PathVariable String col,
             @PathVariable UUID docId,
-            @RequestParam(defaultValue = "false") boolean forwarded
-        ) throws IOException {
+            @RequestParam(defaultValue = "false") boolean forwarded,
+            @RequestParam(defaultValue = "false") boolean replicated
+    ) throws IOException {
 
-        service.deleteDoc(db, col, docId, forwarded);
+        service.deleteDoc(db, col, docId, forwarded, replicated);
         return new APIResponse(200, "Document deleted successfully");
 
     }
@@ -81,9 +83,10 @@ public class DocumentController {
             @PathVariable UUID docId,
             @PathVariable String field,
             @PathVariable String newValue,
-            @RequestParam(defaultValue = "false") boolean forwarded
+            @RequestParam(defaultValue = "false") boolean forwarded,
+            @RequestParam(defaultValue = "false") boolean replicated
     ) throws IOException {
-        service.updateDoc(db, col, docId, field, newValue, forwarded);
+        service.updateDoc(db, col, docId, field, newValue, forwarded, replicated);
         return new APIResponse(200, "Document updated successfully");
     }
 
