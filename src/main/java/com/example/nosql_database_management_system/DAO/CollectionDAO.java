@@ -4,6 +4,7 @@ import com.example.nosql_database_management_system.exception.ForbiddenException
 import com.example.nosql_database_management_system.exception.ResourceNotFoundException;
 import com.example.nosql_database_management_system.model.CollectionSchema;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.io.File;
@@ -13,12 +14,17 @@ import java.nio.file.Files;
 
 @Repository
 public class CollectionDAO {
-    private final String BASE_PATH = "databases/";
+
+    @Value("${node.name}")
+    private String nodeName;
+    private String getBasePath() {
+        return "databases_" + nodeName + "/";
+    }
 
     // create collection
     public void createCol(String DBName, String ColName, JSONObject schema) throws IOException {
 
-        File schemasPath = new File(BASE_PATH + DBName + "/schemas");
+        File schemasPath = new File(getBasePath() + DBName + "/schemas");
 
         if (!schemasPath.exists() && !schemasPath.mkdirs()) {
             throw new ForbiddenException("Failed to create schema directory");
@@ -34,7 +40,7 @@ public class CollectionDAO {
             writer.write(schema.toString(4));
         }
 
-        File collectionFile = new File(BASE_PATH + DBName + "/" + ColName + ".json");
+        File collectionFile = new File(getBasePath() + DBName + "/" + ColName + ".json");
 
         if (!collectionFile.createNewFile()) {
             throw new ForbiddenException("Failed to create collection file");
@@ -46,7 +52,7 @@ public class CollectionDAO {
     public void deleteCol(String DBName, String ColName) {
 
         // schema file
-        File schemaFile = new File(BASE_PATH + DBName + "/schemas/" + ColName + ".json");
+        File schemaFile = new File(getBasePath() + DBName + "/schemas/" + ColName + ".json");
 
         if (!schemaFile.exists()) {
             throw new ResourceNotFoundException("Collection does not exist");
@@ -57,7 +63,7 @@ public class CollectionDAO {
         }
 
         // collection file
-        File collectionFile = new File(BASE_PATH + DBName + "/" + ColName + ".json");
+        File collectionFile = new File(getBasePath() + DBName + "/" + ColName + ".json");
         if (collectionFile.exists() && !collectionFile.delete()) {
             throw new ForbiddenException("Failed to delete collection file");
         }
@@ -65,7 +71,7 @@ public class CollectionDAO {
 
     // get schema
     public CollectionSchema getSchemaAsCollectionSchemaObject(String DBName, String ColName) throws IOException {
-        File file = new File(BASE_PATH + DBName + "/schemas/" + ColName + ".json");
+        File file = new File(getBasePath() + DBName + "/schemas/" + ColName + ".json");
 
         if (!file.exists()) {
             throw new ResourceNotFoundException("Collection does not exist");

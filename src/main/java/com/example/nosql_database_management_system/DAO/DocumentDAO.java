@@ -7,6 +7,7 @@ import com.example.nosql_database_management_system.model.CollectionSchema;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.io.File;
@@ -25,10 +26,14 @@ public class DocumentDAO {
     @Autowired
     private PropertyIndexManager indexManager;
 
-    private final String BASE_PATH = "databases/";
+    @Value("${node.name}")
+    private String nodeName;
+    private String getBasePath() {
+        return "databases_" + nodeName + "/";
+    }
     // insert doc
     public void insertDoc(String db, String col, JSONObject doc) throws IOException {
-        File file = new File(BASE_PATH + db + "/" + col + ".json");
+        File file = new File(getBasePath() + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
@@ -49,7 +54,7 @@ public class DocumentDAO {
 
     // get all doc
     public JSONArray getAllDocs(String db, String col) throws IOException{
-        File file = new File(BASE_PATH + db + "/" + col + ".json");
+        File file = new File(getBasePath() + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
@@ -60,7 +65,7 @@ public class DocumentDAO {
 
     // get doc
     public JSONObject getDoc(String db, String col, UUID docId) throws IOException {
-        File file = new File(BASE_PATH + db + "/" + col + ".json");
+        File file = new File(getBasePath() + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
@@ -77,7 +82,7 @@ public class DocumentDAO {
 
     // delete doc
     public void deleteDoc(String db, String col, UUID docId) throws IOException {
-        File file = new File(BASE_PATH + db + "/" + col + ".json");
+        File file = new File(getBasePath() + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
@@ -107,7 +112,7 @@ public class DocumentDAO {
 
     // update doc
     public void updateDoc(String db, String col, UUID docId, String field, String newValue) throws IOException{
-        File file = new File(BASE_PATH + db + "/" + col + ".json");
+        File file = new File(getBasePath() + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }

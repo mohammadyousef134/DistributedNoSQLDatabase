@@ -5,6 +5,7 @@ import jakarta.annotation.PostConstruct;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -18,15 +19,25 @@ public class IndexInitializer {
     @Autowired
     private PropertyIndexManager indexManager;
 
+    @Value("${node.name}")
+    private String nodeName;
+    private String getBasePath() {
+        return "databases_" + nodeName + "/";
+    }
+
     @PostConstruct
     public void init() throws IOException {
         rebuildIndex();
     }
 
-    private void rebuildIndex() throws IOException {
-        File base = new File("databases/");
 
-        for (File db : base.listFiles()) {
+
+    private void rebuildIndex() throws IOException {
+        File base = new File(getBasePath());
+
+        File[] files = base.listFiles();
+        if (files == null) return;
+        for (File db : files) {
             if (!db.isDirectory()) continue;
 
             String dbName = db.getName();
