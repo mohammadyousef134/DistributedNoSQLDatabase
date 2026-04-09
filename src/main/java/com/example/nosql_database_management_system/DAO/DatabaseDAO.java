@@ -18,15 +18,6 @@ public class DatabaseDAO {
         return "databases_" + nodeName + "/";
     }
 
-    public DatabaseDAO() {
-        File base = new File(getBasePath());
-        if (!base.exists()) {
-            base.mkdirs();
-        }
-        System.out.println(nodeName);
-        System.out.println(base.getAbsolutePath());
-
-    }
     public void createDB(String name) {
         File DBpath = new File(getBasePath() + name);
         if (!DBpath.exists()) {

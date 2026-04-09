@@ -13,13 +13,22 @@ public class CollectionService {
     @Autowired
     CollectionDAO dao;
 
+    @Autowired
+    private NodeCommunicationService nodeCommunicationService;
+
     // create Collection
-    public void createCol(String DBName, String ColName, CollectionSchema schema) throws IOException {
-        dao.createCol(DBName, ColName, schema.toJSON());
+    public void createCol(String db, String col, CollectionSchema schema, boolean replicated) throws IOException {
+        dao.createCol(db, col, schema.toJSON());
+        if (!replicated) {
+            nodeCommunicationService.broadcastCreateCol(db, col, schema);
+        }
     }
 
     // delete Collection
-    public void deleteCol(String DBName, String CollectionName) {
-        dao.deleteCol(DBName, CollectionName);
+    public void deleteCol(String db, String col, boolean replicated) {
+        dao.deleteCol(db, col);
+        if (!replicated) {
+            nodeCommunicationService.broadcastDeleteCol(db, col);
+        }
     }
 }

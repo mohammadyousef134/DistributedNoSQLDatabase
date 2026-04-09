@@ -1,5 +1,7 @@
 package com.example.nosql_database_management_system.service;
 
+import com.example.nosql_database_management_system.model.CollectionSchema;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -13,7 +15,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Handler;
 
 @Service
 public class NodeCommunicationService {
@@ -44,6 +45,7 @@ public class NodeCommunicationService {
         restTemplate.put(url, null, String.class);
 
     }
+
     public void forwardDelete(String node, String db, String col, UUID docId) {
 
         String url = node + "/api/deleteDoc/" +
@@ -60,8 +62,8 @@ public class NodeCommunicationService {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
 
-                HttpEntity<Map<String, Object>> entity =
-                        new HttpEntity<>(doc.toMap(), headers);
+                HttpEntity<String> entity =
+                        new HttpEntity<>(doc.toString(), headers);
 
                 restTemplate.postForObject(url, entity, String.class);
             }
@@ -87,4 +89,50 @@ public class NodeCommunicationService {
             }
         }
     }
+
+    // db
+    public void broadcastCreateDB(String db) {
+        for (String node : nodes) {
+            if (!currentNode.equals(node)) {
+                String url = node + "/api/createDB/" + db + "?replicated=true";
+                restTemplate.postForObject(url, null, String.class);
+            }
+        }
+    }
+
+    public void broadcastDeleteDB(String db) {
+        for (String node : nodes) {
+            if (!node.equals(currentNode)) {
+                String url = node + "/api/deleteDB/" + db + "?replicated=true";
+                restTemplate.delete(url);
+            }
+        }
+    }
+
+
+    // col
+    public void broadcastCreateCol(String db, String col, CollectionSchema schema) {
+        for (String node : nodes) {
+            if (!node.equals(currentNode)) {
+                String url = node + "/api/createCol/" + db + "/" + col + "?replicated=true";
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                HttpEntity<Map<String, Object>> entity =
+                        new HttpEntity<>(schema.toJSON().toMap(), headers);
+                restTemplate.postForObject(url, entity, String.class);
+            }
+        }
+    }
+
+    public void broadcastDeleteCol(String db, String col) {
+        for (String node : nodes) {
+            if (!node.equals(currentNode)) {
+                String url = node + "/api/deleteCol/" + db + "/" + col + "?replicated=true";
+                restTemplate.delete(url);
+            }
+        }
+    }
+
+
+
 }

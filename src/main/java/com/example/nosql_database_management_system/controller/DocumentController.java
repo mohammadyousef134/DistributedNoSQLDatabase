@@ -22,7 +22,7 @@ public class DocumentController {
     public APIResponse insertOne(
             @PathVariable String db,
             @PathVariable String col,
-            @RequestBody Map<String, Object> doc,
+            @RequestBody String doc,
             @RequestParam(defaultValue = "false") boolean forwarded,
             @RequestParam(defaultValue = "false") boolean replicated
     ) throws IOException

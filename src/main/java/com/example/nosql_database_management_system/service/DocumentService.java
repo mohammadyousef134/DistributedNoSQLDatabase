@@ -32,16 +32,21 @@ public class DocumentService {
     // insert doc
     public void insertOne(String db, String col, JSONObject doc, boolean forwarded, boolean replicated) throws IOException {
         CollectionSchema schema = ColDao.getSchemaAsCollectionSchemaObject(db, col);
-        JSONObject validatedDoc = SchemaValidator.validate(doc, schema);
+        JSONObject validatedDoc;
+        if (!doc.has("id")) {
+            validatedDoc = SchemaValidator.validate(doc, schema); // has id
+        }
+        else {
+            validatedDoc = doc;
+        }
 
         String docId = validatedDoc.get("id").toString();
         String affinityNode = affinityService.getAffinityNode(docId);
-        System.out.println("Current Node: " + currentNode);
-        System.out.println("Affinity Node: " + affinityNode);
+        // if doc hasId no validate
 
         if (!forwarded && !currentNode.equals(affinityNode)) {
-            System.out.println("Forwarding insert to: " + affinityNode);
-            nodeCommunicationService.forwardInsert(affinityNode, db, col, doc);
+
+            nodeCommunicationService.forwardInsert(affinityNode, db, col, validatedDoc);
             return;
         }
 
@@ -67,12 +72,7 @@ public class DocumentService {
     public void deleteDoc(String db, String col, UUID docId, boolean forwarded, boolean replicated) throws IOException {
         String affinityNode = affinityService.getAffinityNode(docId.toString());
 
-        System.out.println("Current Node: " + currentNode);
-        System.out.println("Affinity Node: " + affinityNode);
-
         if (!forwarded && !currentNode.equals(affinityNode)) {
-            System.out.println("Forwarding delete to: " + affinityNode);
-
             nodeCommunicationService.forwardDelete(affinityNode, db, col, docId);
             return;
         }
@@ -87,12 +87,7 @@ public class DocumentService {
     public void updateDoc(String db, String col, UUID docId, String field, String newValue, boolean forwarded, boolean replicated) throws IOException {
         String affinityNode = affinityService.getAffinityNode(docId.toString());
 
-        System.out.println("Current Node: " + currentNode);
-        System.out.println("Affinity Node: " + affinityNode);
-
         if (!forwarded && !currentNode.equals(affinityNode)) {
-            System.out.println("Forwarding delete to: " + affinityNode);
-
             nodeCommunicationService.forwardUpdate(affinityNode, db, col, docId, field, newValue);
             return;
         }

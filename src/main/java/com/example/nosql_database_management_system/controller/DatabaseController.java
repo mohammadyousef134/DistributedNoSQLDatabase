@@ -1,6 +1,5 @@
 package com.example.nosql_database_management_system.controller;
 
-import com.example.nosql_database_management_system.DTO.CreateDBRequest;
 import com.example.nosql_database_management_system.model.APIResponse;
 import com.example.nosql_database_management_system.service.DatabaseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,19 +13,26 @@ public class DatabaseController {
     @Autowired
     private DatabaseService service;
 
-    @PostMapping("/databases")
-    public APIResponse createDB(@RequestBody CreateDBRequest request) {
-        service.createDB(request.getName());
+
+    @PostMapping("/createDB/{db}")
+    public APIResponse createDB(
+            @PathVariable String db,
+            @RequestParam(defaultValue = "false") boolean replicated
+            ) {
+        service.createDB(db, replicated);
         return new APIResponse(200, "Database created successfully");
     }
 
-    @DeleteMapping("/databases/{name}")
-    public APIResponse deleteDB(@PathVariable String name) {
-        service.deleteDB(name);
+    @DeleteMapping("/deleteDB/{db}")
+    public APIResponse deleteDB(
+            @PathVariable String db,
+            @RequestParam(defaultValue = "false") boolean replicated
+    ) {
+        service.deleteDB(db, replicated);
         return new APIResponse(200, "Database deleted successfully");
     }
 
-    @GetMapping("/databases")
+    @GetMapping("getDBs")
     public List<String> getAllDBs() {
         return service.getAllDBs();
     }

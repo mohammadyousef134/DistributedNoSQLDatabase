@@ -10,13 +10,21 @@ import java.util.List;
 public class DatabaseService {
     @Autowired
     private DatabaseDAO dao;
+    @Autowired
+    private NodeCommunicationService nodeCommunicationService;
 
-    public void createDB(String name) {
-        dao.createDB(name);
+    public void createDB(String db, boolean replicated) {
+        dao.createDB(db);
+        if (!replicated) {
+            nodeCommunicationService.broadcastCreateDB(db);
+        }
     }
 
-    public void deleteDB(String name) {
-        dao.deleteDB(name);
+    public void deleteDB(String db, boolean replicated) {
+        dao.deleteDB(db);
+        if (!replicated) {
+            nodeCommunicationService.broadcastDeleteDB(db);
+        }
     }
 
     public List<String> getAllDBs() {

@@ -14,22 +14,25 @@ public class CollectionController {
     @Autowired
     private CollectionService service;
 
-    @PostMapping("/createCollection/{DBName}/{CollectionName}")
+    @PostMapping("/createCol/{db}/{col}")
     public APIResponse createCol(
-            @PathVariable String DBName,
-            @PathVariable String CollectionName,
-            @RequestBody CollectionSchema schema
-            ) throws IOException {
-        service.createCol(DBName, CollectionName, schema);
+            @PathVariable String db,
+            @PathVariable String col,
+            @RequestBody CollectionSchema schema,
+            @RequestParam(defaultValue = "false") boolean replicated
+    ) throws IOException {
+        service.createCol(db, col, schema, replicated);
         return new APIResponse(200, "Collection created successfully");
     }
 
-    @DeleteMapping("/deleteCollection/{DBName}/{CollectionName}")
+    @DeleteMapping("/deleteCol/{db}/{col}")
     public APIResponse deleteCol(
-            @PathVariable String DBName,
-            @PathVariable String CollectionName
+            @PathVariable String db,
+            @PathVariable String col,
+            @RequestParam(defaultValue = "false") boolean replicated
+
     ) {
-        service.deleteCol(DBName, CollectionName);
+        service.deleteCol(db, col, replicated);
         return new APIResponse(200, "Collection deleted successfully");
     }
 }
