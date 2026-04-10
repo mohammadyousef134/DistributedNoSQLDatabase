@@ -76,17 +76,18 @@ public class DocumentController {
     }
 
     // /updateDoc/{db}/{collection}/{id}/{field}/{value}
-    @PutMapping("/updateDoc/{db}/{col}/{docId}/{field}/{newValue}")
+    @PutMapping("/updateDoc/{db}/{col}/{docId}/{field}/{value}/{version}")
     public APIResponse updateDoc(
             @PathVariable String db,
             @PathVariable String col,
             @PathVariable UUID docId,
             @PathVariable String field,
-            @PathVariable String newValue,
+            @PathVariable String value,
+            @PathVariable int version,
             @RequestParam(defaultValue = "false") boolean forwarded,
             @RequestParam(defaultValue = "false") boolean replicated
     ) throws IOException {
-        service.updateDoc(db, col, docId, field, newValue, forwarded, replicated);
+        service.updateDoc(db, col, docId, field, value, version, forwarded, replicated);
         return new APIResponse(200, "Document updated successfully");
     }
 

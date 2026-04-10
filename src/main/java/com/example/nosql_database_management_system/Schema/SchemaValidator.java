@@ -41,6 +41,7 @@ public class SchemaValidator {
 
             newDocument.put(key, value);
         }
+        newDocument.put("version", 1);
         return newDocument;
     }
 

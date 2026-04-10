@@ -37,9 +37,10 @@ public class NodeCommunicationService {
         restTemplate.postForObject(url, entity, String.class);
     }
 
-    public void forwardUpdate(String node, String db, String col, UUID docId, String field, String value) {
+    public void forwardUpdate(String node, String db, String col, UUID docId, String field, String value, int expectedVersion) {
         String url = node + "/api/updateDoc/" +
                 db + "/" + col + "/" + docId + "/" + field + "/" + value +
+                "/" + expectedVersion +
                 "?forwarded=true&replicated=false";
 
         restTemplate.put(url, null, String.class);
@@ -70,11 +71,11 @@ public class NodeCommunicationService {
         }
     }
 
-    public void broadcastUpdate(String db, String col, UUID docId, String field, String value) {
+    public void broadcastUpdate(String db, String col, UUID docId, String field, String value, int newVersion) {
         for (String node : nodes) {
             if (!node.equals(currentNode)) {
                 String url = node + "/api/updateDoc/" + db + "/" + col + "/" + docId + "/" + field +
-                        "/" + value + "?forwarded=true&replicated=true";
+                        "/" + value + "/" + newVersion + "?forwarded=true&replicated=true";
 
                 restTemplate.put(url, null, String.class);
             }

@@ -110,36 +110,49 @@ public class DocumentDAO {
         indexManager.removeFromIndex(db, col, object);
     }
 
-    // update doc
-    public void updateDoc(String db, String col, UUID docId, String field, String newValue) throws IOException{
+    public int updateDocWithVersion(String db, String col, UUID docId, String field, String newValue, int expectedVersion) throws IOException {
         File file = new File(getBasePath() + db + "/" + col + ".json");
+
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
+
         String content = Files.readString(file.toPath());
         JSONArray array = new JSONArray(content);
         JSONArray newArray = new JSONArray();
-        JSONObject newDoc = new JSONObject();
         boolean found = false;
+        int newVersion = -1;
         for (int i = 0; i < array.length(); i++) {
             JSONObject obj = array.getJSONObject(i);
             if (obj.getString("id").equals(docId.toString())) {
                 found = true;
+                int currentVersion = obj.optInt("version", 1);
+                if (currentVersion != expectedVersion) {
+                    throw new ValidationException("Version mismatch");
+                }
+
                 CollectionSchema schema = collectionDAO.getSchemaAsCollectionSchemaObject(db, col);
                 if (!schema.getField(field).isNullable() && newValue == null) {
                     throw new ValidationException("Null not allowed");
                 }
                 obj.put(field, newValue);
+
+                newVersion = currentVersion + 1;
+                obj.put("version", newVersion);
             }
+
             newArray.put(obj);
         }
+
         if (!found) {
-            throw new ResourceNotFoundException("Document dose not exist");
+            throw new ResourceNotFoundException("Document does not exist");
         }
+
         try (FileWriter fileWriter = new FileWriter(file, false)) {
             fileWriter.write(newArray.toString(4));
         }
-        indexManager.addToIndex(db, col, newDoc);
+
+        return newVersion;
     }
 
     public List<Map<String, Object>> filter(String db, String col, String field, String value) {
@@ -154,4 +167,47 @@ public class DocumentDAO {
 
         return result;
     }
+
+    public void applyReplicatedUpdate(String db, String col, UUID docId, String field, String value, int version) throws IOException {
+        JSONObject localDoc = getDoc(db, col, docId);
+
+        int localVersion = localDoc.optInt("version", 1);
+
+        // coming < local
+        if (version <= localVersion) {
+            return;
+        }
+
+        localDoc.put(field, value);
+        localDoc.put("version", version);
+
+        updateFullDocument(db, col, docId, localDoc);
+    }
+    public void updateFullDocument(String db, String col, UUID docId, JSONObject doc) throws IOException {
+        File file = new File(getBasePath() + db + "/" + col + ".json");
+        String content = Files.readString(file.toPath());
+        JSONArray array = new JSONArray(content);
+        JSONArray newArray = new JSONArray();
+        JSONObject oldDoc = new JSONObject();
+        boolean found = false;
+        for (int i = 0; i < array.length(); i++) {
+            JSONObject obj = array.getJSONObject(i);
+            if (obj.getString("id").equals(docId.toString())) {
+                found = true;
+                newArray.put(doc);
+                oldDoc = obj;
+                continue;
+            }
+            newArray.put(obj);
+        }
+        if (!found) {
+            throw new ResourceNotFoundException("Document does not exist");
+        }
+        try (FileWriter fileWriter = new FileWriter(file, false)) {
+            fileWriter.write(newArray.toString(4));
+        }
+        if (oldDoc != null) indexManager.removeFromIndex(db, col, oldDoc);
+        indexManager.addToIndex(db, col, doc);
+    }
+
 }

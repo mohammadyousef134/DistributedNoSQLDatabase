@@ -84,17 +84,19 @@ public class DocumentService {
         }
     }
 
-    public void updateDoc(String db, String col, UUID docId, String field, String newValue, boolean forwarded, boolean replicated) throws IOException {
+    public void updateDoc(String db, String col, UUID docId, String field, String newValue, int version, boolean forwarded, boolean replicated) throws IOException {
         String affinityNode = affinityService.getAffinityNode(docId.toString());
 
         if (!forwarded && !currentNode.equals(affinityNode)) {
-            nodeCommunicationService.forwardUpdate(affinityNode, db, col, docId, field, newValue);
+            nodeCommunicationService.forwardUpdate(affinityNode, db, col, docId, field, newValue, version);
             return;
         }
-        DocDao.updateDoc(db, col, docId, field, newValue);
-        if (!replicated) {
-            nodeCommunicationService.broadcastUpdate(db, col, docId, field, newValue);
+        if (replicated) {
+            DocDao.applyReplicatedUpdate(db, col, docId, field, newValue, version);
+            return;
         }
+        int newVersion = DocDao.updateDocWithVersion(db, col, docId, field, newValue, version);
+        nodeCommunicationService.broadcastUpdate(db, col, docId, field, newValue, newVersion);
     }
 
     public List<Map<String, Object>> filter(String db, String col, String field, String value) {
