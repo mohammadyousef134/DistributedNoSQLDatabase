@@ -27,7 +27,7 @@ public class IndexInitializer {
 
     @PostConstruct
     public void init() throws IOException {
-//        rebuildIndex();
+        rebuildIndex();
     }
 
 

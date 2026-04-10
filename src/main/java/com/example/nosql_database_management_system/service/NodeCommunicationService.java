@@ -21,7 +21,7 @@ public class NodeCommunicationService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${node.workerPath}")
-    private String currentNode;
+    private String currentNodePath;
     List<String> nodes = AffinityService.nodes;
 
     public void forwardInsert(String node, String db, String col, JSONObject doc) {
@@ -58,7 +58,7 @@ public class NodeCommunicationService {
 
     public void broadcastInsert(String db, String col, JSONObject doc) {
         for (String node : nodes) {
-            if (!node.equals(currentNode)) {
+            if (!node.equals(currentNodePath)) {
                 String url = node + "/api/insertOne/" + db + "/" + col + "?forwarded=true&replicated=true";
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
@@ -73,7 +73,7 @@ public class NodeCommunicationService {
 
     public void broadcastUpdate(String db, String col, UUID docId, String field, String value, int newVersion) {
         for (String node : nodes) {
-            if (!node.equals(currentNode)) {
+            if (!node.equals(currentNodePath)) {
                 String url = node + "/api/updateDoc/" + db + "/" + col + "/" + docId + "/" + field +
                         "/" + value + "/" + newVersion + "?forwarded=true&replicated=true";
 
@@ -84,7 +84,7 @@ public class NodeCommunicationService {
 
     public void broadcastDelete(String db, String col, UUID docId) {
         for (String node : nodes) {
-            if (!node.equals(currentNode)) {
+            if (!node.equals(currentNodePath)) {
                 String url = node + "/api/deleteDoc/" + db + "/" + col + "/" + docId + "?forwarded=true&replicated=true";
                 restTemplate.delete(url);
             }
@@ -94,7 +94,7 @@ public class NodeCommunicationService {
     // db
     public void broadcastCreateDB(String db) {
         for (String node : nodes) {
-            if (!currentNode.equals(node)) {
+            if (!currentNodePath.equals(node)) {
                 String url = node + "/api/createDB/" + db + "?replicated=true";
                 restTemplate.postForObject(url, null, String.class);
             }
@@ -103,7 +103,7 @@ public class NodeCommunicationService {
 
     public void broadcastDeleteDB(String db) {
         for (String node : nodes) {
-            if (!node.equals(currentNode)) {
+            if (!node.equals(currentNodePath)) {
                 String url = node + "/api/deleteDB/" + db + "?replicated=true";
                 restTemplate.delete(url);
             }
@@ -114,7 +114,7 @@ public class NodeCommunicationService {
     // col
     public void broadcastCreateCol(String db, String col, CollectionSchema schema) {
         for (String node : nodes) {
-            if (!node.equals(currentNode)) {
+            if (!node.equals(currentNodePath)) {
                 String url = node + "/api/createCol/" + db + "/" + col + "?replicated=true";
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
@@ -127,11 +127,30 @@ public class NodeCommunicationService {
 
     public void broadcastDeleteCol(String db, String col) {
         for (String node : nodes) {
-            if (!node.equals(currentNode)) {
+            if (!node.equals(currentNodePath)) {
                 String url = node + "/api/deleteCol/" + db + "/" + col + "?replicated=true";
                 restTemplate.delete(url);
             }
         }
+    }
+
+    public String getOtherNode() {
+
+        for (String node : nodes) {
+            if (node.contains(currentNodePath)) continue;
+            try {
+                restTemplate.getForObject(node + "/internal/exportData", Object.class);
+                return node;
+            } catch (Exception e) {
+                // node is not alive
+            }
+        }
+
+        return null;
+    }
+
+    public Map<String, Object> get(String url) {
+        return restTemplate.getForObject(url, Map.class);
     }
 
 
