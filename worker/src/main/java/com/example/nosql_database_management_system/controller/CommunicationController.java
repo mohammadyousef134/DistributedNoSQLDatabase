@@ -11,11 +11,12 @@ public class CommunicationController {
     @Autowired
     private AuthService authService;
 
-    @PostMapping("/addAuthenticatedUser/{username}/{token}")
+    @PostMapping("/addAuthenticatedUser/{username}/{token}/{worker}")
     public APIResponse addUser(
             @PathVariable String username,
-            @PathVariable String token) {
-        authService.addUser(username, token);
+            @PathVariable String token,
+            @PathVariable String worker) {
+        authService.addUser(username, token, worker);
         return new APIResponse(200, "User added");
     }
 
