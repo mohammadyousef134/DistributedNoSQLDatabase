@@ -43,7 +43,7 @@ public class DocumentService {
         String docId = validatedDoc.get("id").toString();
         String affinityNode = affinityService.getAffinityNode(docId);
         // if doc hasId no validate
-
+        System.out.println("affinity node: " + affinityNode);
         if (!forwarded && !currentNode.equals(affinityNode)) {
 
             nodeCommunicationService.forwardInsert(affinityNode, db, col, validatedDoc);

@@ -76,35 +76,41 @@ public class CommunicationController {
     public APIResponse insertInternal(
             @PathVariable String db,
             @PathVariable String col,
-            @RequestBody String doc) throws Exception {
+            @RequestBody String doc,
+            @RequestParam(defaultValue = "false") boolean replicated
+    ) throws Exception {
 
-        docService.insertOne(db, col, new JSONObject(doc), true, true);
+        docService.insertOne(db, col, new JSONObject(doc), true, replicated);
         return new APIResponse(200, "Inserted (replicated)");
     }
 
-    @PostMapping("/delete/{db}/{col}/{id}")
+    @DeleteMapping("/delete/{db}/{col}/{id}")
     public APIResponse deleteInternal(
             @PathVariable String db,
             @PathVariable String col,
-            @PathVariable String id) throws Exception {
+            @PathVariable String id,
+            @RequestParam(defaultValue = "false") boolean replicated
+    ) throws Exception {
 
-        docService.deleteDoc(db, col, UUID.fromString(id), true, true);
+        docService.deleteDoc(db, col, UUID.fromString(id), true, replicated);
         return new APIResponse(200, "Deleted (replicated)");
     }
 
-    @PostMapping("/update/{db}/{col}/{id}")
+    @PutMapping("/update/{db}/{col}/{id}")
     public APIResponse updateInternal(
             @PathVariable String db,
             @PathVariable String col,
             @PathVariable String id,
             @RequestParam String field,
             @RequestParam String value,
-            @RequestParam int version) throws Exception {
-
+            @RequestParam int version,
+            @RequestParam(defaultValue = "false") boolean replicated
+    ) throws Exception {
+        System.out.println("hi i'm from worker2");
         docService.updateDoc(
                 db, col, UUID.fromString(id),
                 field, value, version,
-                true, true
+                true, replicated
         );
 
         return new APIResponse(200, "Updated (replicated)");

@@ -25,8 +25,7 @@ public class NodeCommunicationService {
     List<String> nodes = AffinityService.nodes;
 
     public void forwardInsert(String node, String db, String col, JSONObject doc) {
-
-        String url = node + "/api/insertOne/" + db + "/" + col + "?forwarded=true&replicated=false";
+        String url = node + "/internal/insert/" + db + "/" + col;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -38,10 +37,10 @@ public class NodeCommunicationService {
     }
 
     public void forwardUpdate(String node, String db, String col, UUID docId, String field, String value, int expectedVersion) {
-        String url = node + "/api/updateDoc/" +
-                db + "/" + col + "/" + docId + "/" + field + "/" + value +
-                "/" + expectedVersion +
-                "?forwarded=true&replicated=false";
+        String url = node + "/internal/update/" + db + "/" + col + "/" + docId
+                + "?field=" + field
+                + "&value=" + value
+                + "&version=" + expectedVersion;
 
         restTemplate.put(url, null, String.class);
 
@@ -49,9 +48,8 @@ public class NodeCommunicationService {
 
     public void forwardDelete(String node, String db, String col, UUID docId) {
 
-        String url = node + "/api/deleteDoc/" +
-                db + "/" + col + "/" + docId +
-                "?forwarded=true&replicated=false";
+        String url = node + "/internal/delete/" +
+                db + "/" + col + "/" + docId;
 
         restTemplate.delete(url);
     }
@@ -59,7 +57,7 @@ public class NodeCommunicationService {
     public void broadcastInsert(String db, String col, JSONObject doc) {
         for (String node : nodes) {
             if (!node.equals(currentNodePath)) {
-                String url = node + "/internal/insert/" + db + "/" + col;
+                String url = node + "/internal/insert/" + db + "/" + col + "?replicated=true";
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -77,7 +75,7 @@ public class NodeCommunicationService {
                 String url = node + "/internal/update/" + db + "/" + col + "/" + docId
                         + "?field=" + field
                         + "&value=" + value
-                        + "&version=" + newVersion;
+                        + "&version=" + newVersion  + "&replicated=true";
 
                 restTemplate.put(url, null, String.class);
             }
@@ -87,7 +85,7 @@ public class NodeCommunicationService {
     public void broadcastDelete(String db, String col, UUID docId) {
         for (String node : nodes) {
             if (!node.equals(currentNodePath)) {
-                String url = node + "/internal/delete/" + db + "/" + col + "/" + docId;
+                String url = node + "/internal/delete/" + db + "/" + col + "/" + docId  + "?replicated=true";
                 restTemplate.delete(url);
             }
         }
