@@ -62,6 +62,9 @@ public class SchemaValidator {
         else if (type.equals(SchemaFieldType.DOUBLE)) {
             return value instanceof Double || value instanceof Float;
         }
+        else if (type.equals(SchemaFieldType.LONG)) {
+            return value instanceof Long || value instanceof Integer;
+        }
         else {
             return false;
         }

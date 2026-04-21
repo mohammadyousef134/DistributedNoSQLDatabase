@@ -1,6 +1,7 @@
 package com.example.nosql_database_management_system.DAO;
 
 import com.example.nosql_database_management_system.DAO.indexing.PropertyIndexManager;
+import com.example.nosql_database_management_system.cache.LRUCache;
 import com.example.nosql_database_management_system.exception.ResourceNotFoundException;
 import com.example.nosql_database_management_system.exception.ValidationException;
 import com.example.nosql_database_management_system.model.CollectionSchema;
@@ -25,6 +26,8 @@ public class DocumentDAO {
     private CollectionDAO collectionDAO;
     @Autowired
     private PropertyIndexManager indexManager;
+    @Autowired
+    private LRUCache cache;
 
     @Value("${node.name}")
     private String nodeName;
@@ -49,6 +52,7 @@ public class DocumentDAO {
         try (FileWriter fileWriter = new FileWriter(file, false)) {
             fileWriter.write(jsonArray.toString(4));
         }
+        cache.clear();
         indexManager.addToIndex(db, col, doc);
     }
 
@@ -112,6 +116,7 @@ public class DocumentDAO {
         try (FileWriter fileWriter = new FileWriter(file, false)) {
             fileWriter.write(newArray.toString(4));
         }
+        cache.clear();
         indexManager.removeFromIndex(db, col, object);
     }
 
@@ -127,10 +132,15 @@ public class DocumentDAO {
         JSONArray newArray = new JSONArray();
         boolean found = false;
         int newVersion = -1;
+        JSONObject oldDoc = new JSONObject();
+        JSONObject newDoc = new JSONObject();
+
         for (int i = 0; i < array.length(); i++) {
             JSONObject obj = array.getJSONObject(i);
             if (obj.getString("id").equals(docId.toString())) {
                 found = true;
+                oldDoc = obj.similar(obj) ? new JSONObject(obj.toString()) : obj; // snapshot before mutation
+
                 int currentVersion = obj.optInt("version", 1);
                 if (currentVersion != expectedVersion) {
                     throw new ValidationException("Version mismatch");
@@ -140,12 +150,15 @@ public class DocumentDAO {
                 if (!schema.getField(field).isNullable() && newValue == null) {
                     throw new ValidationException("Null not allowed");
                 }
-                obj.put(field, newValue);
+
+                Object parsedValue = field.equals("read") ? Boolean.parseBoolean(newValue) : newValue;
+                obj.put(field, parsedValue);
 
                 newVersion = currentVersion + 1;
                 obj.put("version", newVersion);
-            }
 
+                newDoc = obj;
+            }
             newArray.put(obj);
         }
 
@@ -156,8 +169,12 @@ public class DocumentDAO {
         try (FileWriter fileWriter = new FileWriter(file, false)) {
             fileWriter.write(newArray.toString(4));
         }
+        if (oldDoc != null) indexManager.removeFromIndex(db, col, oldDoc);
+        indexManager.addToIndex(db, col, newDoc);
 
+        cache.clear();
         return newVersion;
+
     }
 
     public List<Map<String, Object>> filter(String db, String col, String field, String value) {
@@ -200,7 +217,7 @@ public class DocumentDAO {
             if (obj.getString("id").equals(docId.toString())) {
                 found = true;
                 newArray.put(doc);
-                oldDoc = obj;
+                oldDoc = obj.similar(obj) ? new JSONObject(obj.toString()) : obj;
                 continue;
             }
             newArray.put(obj);
@@ -213,6 +230,7 @@ public class DocumentDAO {
         }
         if (oldDoc != null) indexManager.removeFromIndex(db, col, oldDoc);
         indexManager.addToIndex(db, col, doc);
+        cache.clear();
     }
 
 }
