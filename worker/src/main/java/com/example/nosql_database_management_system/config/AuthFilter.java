@@ -36,15 +36,16 @@ public class AuthFilter extends OncePerRequestFilter {
         String username = request.getHeader("username");
         String token = request.getHeader("token");
         if (username == null || token == null ||
-                !authService.isValid(username, token)) {
-        System.out.println("username=" + username + " token=" + token);
+                (!authService.isValid(username, token) && !authService.isAdmin(username, token))) {
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Unauthorized");
             return;
         }
 
-        if (!authService.isCorrectWorker(token, currentWorker)) {
+        if (!authService.isAdmin(username, token) &&
+                !authService.isCorrectWorker(token, currentWorker)) {
+
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.getWriter().write("Wrong worker");
             return;

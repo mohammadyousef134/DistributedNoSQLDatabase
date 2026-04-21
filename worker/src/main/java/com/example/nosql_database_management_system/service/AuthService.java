@@ -1,6 +1,7 @@
 package com.example.nosql_database_management_system.service;
 
 import com.example.nosql_database_management_system.model.AuthenticatedUser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -9,6 +10,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class AuthService {
     private final Map<String, AuthenticatedUser> tokenToUser = new ConcurrentHashMap<>();
+
+    @Value("${admin.username}")
+    private String adminUsername;
+
+    @Value("${admin.token}")
+    private String adminToken;
+
+    public boolean isAdmin(String username, String token) {
+        return username.equals(adminUsername) && token.equals(adminToken);
+    }
 
     public void addUser(String username, String token, String worker) {
         tokenToUser.put(token, new AuthenticatedUser(username, token, worker));
