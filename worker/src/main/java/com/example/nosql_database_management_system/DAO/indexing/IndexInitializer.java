@@ -48,6 +48,9 @@ public class IndexInitializer {
 
                 String content = new String(Files.readAllBytes(colFile.toPath()));
 
+                if (content.isEmpty()) {
+                    continue;
+                }
                 JSONArray docs = new JSONArray(content);
 
                 for (int i = 0; i < docs.length(); i++) {

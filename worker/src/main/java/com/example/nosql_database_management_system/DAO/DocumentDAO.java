@@ -53,14 +53,19 @@ public class DocumentDAO {
     }
 
     // get all doc
-    public JSONArray getAllDocs(String db, String col) throws IOException{
+    public JSONArray getAllDocs(String db, String col) throws IOException {
         File file = new File(getBasePath() + db + "/" + col + ".json");
         if (!file.exists()) {
             throw new ResourceNotFoundException("Database or Collection does not exist");
         }
-        String content = Files.readString(file.toPath());
-        JSONArray array = new JSONArray(content);
-        return array;
+
+        String content = Files.readString(file.toPath()).trim();
+
+        if (content.isEmpty()) {
+            return new JSONArray();
+        }
+
+        return new JSONArray(content);
     }
 
     // get doc
