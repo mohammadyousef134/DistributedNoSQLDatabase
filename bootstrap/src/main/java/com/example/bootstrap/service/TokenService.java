@@ -13,9 +13,10 @@ public class TokenService {
 
     private static final long EXPIRY_TIME = 3 * 60 * 60 * 1000; // 3 hours
 
-    public String generateToken() {
+    public String generateToken(String workerName) {
+
         long expiry = Instant.now().toEpochMilli() + EXPIRY_TIME;
-        return UUID.randomUUID() + "_" + expiry;
+        return workerName + "_" + UUID.randomUUID() + "_" + expiry;
     }
 
 }

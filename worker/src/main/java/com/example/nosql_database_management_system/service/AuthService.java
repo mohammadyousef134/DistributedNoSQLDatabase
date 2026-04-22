@@ -35,11 +35,11 @@ public class AuthService {
         if (user == null || username == null || token == null) return false;
 
         String[] parts = token.split("_");
-        if (parts.length != 2) return false;
+        if (parts.length != 3) return false;
 
         long expiry;
         try {
-            expiry = Long.parseLong(parts[1]);
+            expiry = Long.parseLong(parts[2]);
         } catch (Exception e) {
             return false;
         }

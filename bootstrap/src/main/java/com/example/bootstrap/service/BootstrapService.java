@@ -19,15 +19,14 @@ public class BootstrapService {
     private RestTemplate restTemplate;
 
     public Map<String, String> registerUser(String username) {
-
-        String token = tokenService.generateToken();
-
         String workerUrl = loadBalancer.getNextWorker();
 
         String workerName = extractWorkerName(workerUrl);
 
+        String token = tokenService.generateToken(workerName);
+
         String url = workerUrl + "/internal/addAuthenticatedUser/"
-                + username + "/" + token + "/" + workerName;
+                 + username + "/" + token + "/" + workerName;
 
         restTemplate.postForObject(url, null, String.class);
 
