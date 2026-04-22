@@ -13,26 +13,9 @@ public class TokenService {
 
     private static final long EXPIRY_TIME = 3 * 60 * 60 * 1000; // 3 hours
 
-    private final Map<String, Long> tokenExpiry = new ConcurrentHashMap<>();
-
     public String generateToken() {
-        String token = UUID.randomUUID().toString();
-        tokenExpiry.put(token, Instant.now().toEpochMilli() + EXPIRY_TIME);
-        return token;
+        long expiry = Instant.now().toEpochMilli() + EXPIRY_TIME;
+        return UUID.randomUUID() + "_" + expiry;
     }
 
-    public boolean isValid(String token) {
-        Long expiry = tokenExpiry.get(token);
-        return expiry != null && expiry > Instant.now().toEpochMilli();
-    }
-
-    public void removeToken(String token) {
-        tokenExpiry.remove(token);
-    }
-
-    @Scheduled(fixedRate = 30 * 60 * 1000)
-    public void cleanExpiredTokens() {
-        long now = Instant.now().toEpochMilli();
-        tokenExpiry.entrySet().removeIf(e -> e.getValue() < now);
-    }
 }

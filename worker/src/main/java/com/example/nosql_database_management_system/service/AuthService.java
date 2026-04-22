@@ -23,9 +23,6 @@ public class AuthService {
 
     public void addUser(String username, String token, String worker) {
         tokenToUser.put(token, new AuthenticatedUser(username, token, worker));
-        System.out.println("token: " + token);
-
-        System.out.println(tokenToUser.get(token));
     }
 
     public void removeUser(String token) {
@@ -34,10 +31,25 @@ public class AuthService {
 
     public boolean isValid(String username, String token) {
         AuthenticatedUser user = tokenToUser.get(token);
-        System.out.println("🔍 Checking auth:");
-        System.out.println("Token: " + token);
-        System.out.println("Stored user: " + user);
-        return user != null && user.getUsername().equals(username);
+
+        if (user == null || username == null || token == null) return false;
+
+        String[] parts = token.split("_");
+        if (parts.length != 2) return false;
+
+        long expiry;
+        try {
+            expiry = Long.parseLong(parts[1]);
+        } catch (Exception e) {
+            return false;
+        }
+
+        if (expiry < System.currentTimeMillis()) {
+            tokenToUser.remove(token);
+            return false;
+        }
+
+        return user.getUsername().equals(username);
     }
 
     public boolean isCorrectWorker(String token, String currentWorker) {
