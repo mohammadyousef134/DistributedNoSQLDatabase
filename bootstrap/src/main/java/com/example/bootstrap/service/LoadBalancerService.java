@@ -8,8 +8,8 @@ import java.util.List;
 public class LoadBalancerService {
 
     private final List<String> workers = List.of(
-            "http://localhost:8081",
-            "http://localhost:8082"
+            "http://worker1:8081",
+            "http://worker2:8082"
     );
 
     private int index = 0;

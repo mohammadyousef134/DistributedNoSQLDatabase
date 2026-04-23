@@ -24,6 +24,7 @@ public class EmailDAO {
                                String col, Map<String, Object> doc) {
         String url = workerUrl + "/api/insertOne/" + dbName + "/" + col;
         HttpEntity<Map> request = new HttpEntity<>(doc, buildHeaders(token, username));
+        System.out.println("WORKER URL = " + workerUrl);
         restTemplate.postForEntity(url, request, Map.class);
     }
 

@@ -7,8 +7,8 @@ import java.util.List;
 @Service
 public class AffinityService {
     public static List<String> nodes = List.of(
-            "http://localhost:8081",
-            "http://localhost:8082"
+            "http://worker1:8081",
+            "http://worker2:8082"
     );
     public String getAffinityNode(String documentId) {
         int hash = Math.abs(documentId.hashCode());

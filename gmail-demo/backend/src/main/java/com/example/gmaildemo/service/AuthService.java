@@ -15,8 +15,8 @@ public class AuthService {
         String workerName = token.split("_", 3)[0];
 
         return switch (workerName) {
-            case "worker1" -> "http://localhost:8081";
-            case "worker2" -> "http://localhost:8082";
+            case "worker1" -> "http://worker1:8081";
+            case "worker2" -> "http://worker2:8082";
             default -> throw new RuntimeException("Unknown worker: " + workerName);
         };
     }
