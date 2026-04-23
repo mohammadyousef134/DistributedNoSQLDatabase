@@ -1,0 +1,45 @@
+#version: "3.9"
+
+services:
+
+  bootstrap:
+    build: ./bootstrap
+    container_name: bootstrap
+    ports:
+      - "8080:8080"
+
+  worker1:
+    volumes:
+      - ./databases_worker1:/app/databases_worker1
+    build: ./worker
+    container_name: worker1
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_CONFIG_NAME=application-worker1
+
+  worker2:
+    volumes:
+      - ./databases_worker2:/app/databases_worker2
+    build: ./worker
+    container_name: worker2
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_CONFIG_NAME=application-worker2
+
+  backend:
+    build: ./gmail-demo/backend
+    container_name: backend
+    ports:
+      - "8085:8085"
+    depends_on:
+      - bootstrap
+
+  frontend:
+    build: ./gmail-demo/frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
